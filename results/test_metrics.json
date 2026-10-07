@@ -1,0 +1,140 @@
+{
+  "n": 360,
+  "accuracy": 1.0,
+  "macro_precision": 1.0,
+  "macro_recall": 1.0,
+  "macro_f1": 1.0,
+  "per_class": {
+    "crazing": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 60,
+      "false_positives": 0,
+      "false_negatives": 0
+    },
+    "inclusion": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 60,
+      "false_positives": 0,
+      "false_negatives": 0
+    },
+    "patches": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 60,
+      "false_positives": 0,
+      "false_negatives": 0
+    },
+    "pitted_surface": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 60,
+      "false_positives": 0,
+      "false_negatives": 0
+    },
+    "rolled-in_scale": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 60,
+      "false_positives": 0,
+      "false_negatives": 0
+    },
+    "scratches": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 60,
+      "false_positives": 0,
+      "false_negatives": 0
+    }
+  },
+  "labels": [
+    "crazing",
+    "inclusion",
+    "patches",
+    "pitted_surface",
+    "rolled-in_scale",
+    "scratches"
+  ],
+  "confusion_matrix": [
+    [
+      60,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      60,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      60,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      60,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      60,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      60
+    ]
+  ],
+  "top_confusions": [],
+  "mean_confidence_when_right": 0.9673142433166504,
+  "mean_confidence_when_wrong": null,
+  "expected_calibration_error": 0.03268587821059757,
+  "confidence_trade_off": {
+    "0.5": {
+      "share_of_images_answered": 1.0,
+      "accuracy_on_those": 1.0
+    },
+    "0.7": {
+      "share_of_images_answered": 1.0,
+      "accuracy_on_those": 1.0
+    },
+    "0.9": {
+      "share_of_images_answered": 0.9944444444444445,
+      "accuracy_on_those": 1.0
+    }
+  },
+  "split": "test",
+  "model": {
+    "arch": "resnet18",
+    "epoch": 12,
+    "git_commit": "9d98af8-dirty",
+    "pretrained": true
+  }
+}

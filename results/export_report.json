@@ -1,0 +1,24 @@
+{
+  "model_version": "20261007T222015Z-9d98af8-dirty",
+  "arch": "resnet18",
+  "onnx_path": "/home/devilinside/Desktop/defect_detection_system/models/best_model.onnx",
+  "size_mb": 42.64,
+  "sha256": "12bfec4b4071ba53b8711e32cb2490b61e742838727bc21def2e18e1255ad664",
+  "exporter": "torchscript",
+  "parity": {
+    "samples": 8,
+    "max_abs_logit_diff": 3.0994415283203125e-06,
+    "max_abs_preprocess_diff": 0.0,
+    "tolerance": 0.001
+  },
+  "latency_ms_batch1_one_thread": {
+    "p50": 29.57,
+    "p95": 29.67,
+    "runs": 30
+  },
+  "versions": {
+    "torch": "2.14.1+cpu",
+    "onnx": "1.23.2",
+    "onnxruntime": "1.30.0"
+  }
+}
