@@ -12,8 +12,14 @@ RAW_DIR = PROJECT_ROOT / "data" / "raw" / "NEU-DET"
 TRAIN_IMAGES_DIR = RAW_DIR / "train" / "images"
 VAL_IMAGES_DIR = RAW_DIR / "validation" / "images"
 SPLITS_DIR = PROJECT_ROOT / "data" / "splits"
+TRAIN_CSV = SPLITS_DIR / "train.csv"
+VAL_CSV = SPLITS_DIR / "val.csv"
+TEST_CSV = SPLITS_DIR / "test.csv"
 RESULTS_DIR = PROJECT_ROOT / "results"
+NORM_STATS_PATH = RESULTS_DIR / "normalization_stats.json"
 MODEL_DIR = PROJECT_ROOT / "models"
+CHECKPOINT_PATH = MODEL_DIR / "best_model.pt"  # training output (PyTorch)
+ONNX_PATH = MODEL_DIR / "best_model.onnx"  # export output, the file that gets published to the bucket
 
 # --- Classes ---------------------------------------------------------------
 # Alphabetical so label_idx is deterministic and identical across every script/run.
@@ -29,6 +35,7 @@ BINARY_MODE = True
 
 # --- Misc constants --------------------------------------------------------
 RANDOM_SEED = 42
+VAL_FRACTION = 0.15  # share of the official train folder held out for model selection
 IMAGE_SIZE = 224  # standard input size for ImageNet-pretrained backbones
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp"}
 

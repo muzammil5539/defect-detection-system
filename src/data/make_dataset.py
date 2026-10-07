@@ -1,8 +1,15 @@
 """Build split CSVs, a sample grid and normalization stats from NEU-DET.
 
-Uses the dataset's OFFICIAL train/validation split as-is (no re-splitting).
+Three splits, all disjoint:
+  train  85% of the official train folder (stratified by class, seeded)
+  val    the other 15%: used for model selection and early stopping
+  test   the official validation folder, untouched: used once, for the final report
+
+The official validation folder is kept whole as the test set so results stay comparable
+with published NEU-DET numbers and no test image can influence a training decision.
 Run: uv run python -m src.data.make_dataset
 """
+import hashlib
 import json
 import logging
 import random
@@ -16,17 +23,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from PIL import Image
+from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from src.data.inspect_data import imbalance_ratio, is_valid_image, list_images
 from src.utils.config import (
     CLASS_NAMES,
     IMAGE_SIZE,
+    NORM_STATS_PATH,
     PROJECT_ROOT,
     RANDOM_SEED,
     RESULTS_DIR,
     SPLITS_DIR,
     TRAIN_IMAGES_DIR,
+    VAL_FRACTION,
     VAL_IMAGES_DIR,
     setup_logging,
 )
@@ -50,6 +60,56 @@ def build_split_df(images_dir: Path) -> pd.DataFrame:
             if is_valid_image(f):
                 rows.append((f.relative_to(PROJECT_ROOT).as_posix(), cls, idx))
     return pd.DataFrame(rows, columns=["image_path", "label", "label_idx"])
+
+
+def split_train_val(df: pd.DataFrame, val_fraction: float = VAL_FRACTION) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Stratified split: every class keeps the same share in train and val.
+
+    Rows are re-sorted by path so the CSVs are byte-identical from run to run.
+    """
+    train_df, val_df = train_test_split(df, test_size=val_fraction, stratify=df["label_idx"], random_state=RANDOM_SEED)
+    return (
+        train_df.sort_values("image_path").reset_index(drop=True),
+        val_df.sort_values("image_path").reset_index(drop=True),
+    )
+
+
+def _content_hash(rel_path: str) -> str:
+    """md5 of the file bytes. Used for de-duplication only, not security."""
+    return hashlib.md5((PROJECT_ROOT / rel_path).read_bytes()).hexdigest()
+
+
+def drop_duplicate_images(df: pd.DataFrame) -> pd.DataFrame:
+    """Keep the first of every group of byte-identical files.
+
+    Done before splitting: otherwise two copies of one image can land in train AND val,
+    and the val score then partly measures memorisation.
+    """
+    first_path: dict[str, str] = {}
+    keep: list[bool] = []
+    for rel in df["image_path"]:
+        digest = _content_hash(rel)
+        if digest in first_path:
+            logger.warning("Dropping duplicate image %s (identical to %s)", rel, first_path[digest])
+            keep.append(False)
+        else:
+            first_path[digest] = rel
+            keep.append(True)
+    return df[keep].reset_index(drop=True)
+
+
+def find_cross_split_duplicates(splits: dict[str, pd.DataFrame]) -> list[str]:
+    """One message per file whose bytes also appear in an earlier split (expected: none)."""
+    first_seen: dict[str, tuple[str, str]] = {}  # content hash -> (split, path)
+    found: list[str] = []
+    for name, df in splits.items():
+        for rel in df["image_path"]:
+            digest = _content_hash(rel)
+            if digest not in first_seen:
+                first_seen[digest] = (name, rel)
+            elif first_seen[digest][0] != name:
+                found.append(f"{rel} [{name}] == {first_seen[digest][1]} [{first_seen[digest][0]}]")
+    return found
 
 
 def log_distribution(name: str, df: pd.DataFrame) -> None:
@@ -121,13 +181,23 @@ def main() -> int:
     SPLITS_DIR.mkdir(parents=True, exist_ok=True)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    train_df = build_split_df(TRAIN_IMAGES_DIR)
-    val_df = build_split_df(VAL_IMAGES_DIR)
-    if train_df.empty or val_df.empty:
-        logger.error("Empty split (train=%d, val=%d); check %s", len(train_df), len(val_df), TRAIN_IMAGES_DIR.parent.parent)
+    official_train_df = build_split_df(TRAIN_IMAGES_DIR)
+    test_df = build_split_df(VAL_IMAGES_DIR)  # the official "validation" folder is our untouched test set
+    if official_train_df.empty or test_df.empty:
+        logger.error(
+            "Empty split (train=%d, test=%d); check %s", len(official_train_df), len(test_df), TRAIN_IMAGES_DIR.parent.parent
+        )
         return 1
 
-    for name, df in (("train", train_df), ("val", val_df)):
+    train_df, val_df = split_train_val(drop_duplicate_images(official_train_df))
+    splits = {"train": train_df, "val": val_df, "test": test_df}
+
+    duplicates = find_cross_split_duplicates(splits)
+    for msg in duplicates:
+        logger.warning("Cross-split duplicate: %s", msg)
+    logger.info("Cross-split duplicate images: %d", len(duplicates))
+
+    for name, df in splits.items():
         df.to_csv(SPLITS_DIR / f"{name}.csv", index=False)
         log_distribution(name, df)
     logger.info("CSVs written to %s", SPLITS_DIR)
@@ -135,7 +205,7 @@ def main() -> int:
     save_sample_grid(train_df, RESULTS_DIR / "sample_grid.png")
 
     stats = compute_norm_stats(train_df)
-    (RESULTS_DIR / "normalization_stats.json").write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
+    NORM_STATS_PATH.write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
     logger.info("Normalization stats: mean=%s std=%s", stats["mean"], stats["std"])
     return 0
 

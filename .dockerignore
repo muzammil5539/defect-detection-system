@@ -1,0 +1,24 @@
+# Keep the build context small and keep secrets and weights out of the image.
+.git
+.github
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+
+# Never bake data, models or credentials into the image.
+data
+models
+model_cache
+results
+*.onnx
+*.pt
+.env
+.env.*
+!.env.example
+*.pdf
+
+# Not needed to run the service.
+tests
+docs

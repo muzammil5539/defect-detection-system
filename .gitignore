@@ -2,3 +2,16 @@
 __pycache__/
 *.pyc
 ddf95790.pdf
+
+# secrets and local config
+.env
+
+# model artifacts live in the bucket, never in git (anchored: src/models/ is code)
+/models/
+*.onnx
+*.pt
+
+# runtime and tooling caches
+/model_cache/
+.pytest_cache/
+.ruff_cache/
