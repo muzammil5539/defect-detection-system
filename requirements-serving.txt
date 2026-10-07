@@ -1,0 +1,10 @@
+# Runtime dependencies of the inference container (installed by the Dockerfile).
+# No torch: the model is an ONNX file fetched from the bucket at startup, which keeps the
+# image small and the cold start fast. Pinned to the versions the test suite runs against.
+fastapi==0.142.3
+uvicorn==0.54.0
+python-multipart==0.0.32
+numpy==2.5.3
+pillow==12.3.0
+onnxruntime==1.30.0
+boto3==1.43.109

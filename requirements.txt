@@ -11,4 +11,6 @@ fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
 python-multipart>=0.0.9
 onnx>=1.16.0
+onnxscript>=0.1.0  # fallback ONNX exporter for torch versions that drop the legacy one
 onnxruntime>=1.17.0
+boto3>=1.36.0

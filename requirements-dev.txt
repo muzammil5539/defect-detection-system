@@ -1,0 +1,7 @@
+# Test and lint tooling. Install next to requirements-serving.txt (serving tests only)
+# or requirements.txt (everything, including the training tests).
+onnx>=1.16.0      # the tests build a tiny ONNX model without needing torch
+pytest>=8.0
+httpx2            # FastAPI TestClient (Starlette 1.x prefers it over httpx)
+moto[server]>=5.0 # in-process S3 server standing in for IDrive e2
+ruff>=0.5

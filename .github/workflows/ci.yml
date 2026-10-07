@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  serving:
+    name: Lint and serving tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements-serving.txt
+            requirements-dev.txt
+      # The same pinned dependencies the Docker image installs (no torch).
+      - run: pip install -r requirements-serving.txt -r requirements-dev.txt
+      - run: ruff check src tests
+      # Tests that need torch or pandas skip themselves here; the next job runs them.
+      - run: python -m pytest -q
+
+  training:
+    name: Training and export tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+      # CPU-only torch is a fraction of the size of the default CUDA build.
+      - run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: python -m pytest -q tests/test_training.py tests/test_data_prep.py
+
+  docker:
+    name: Docker image
+    needs: serving
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-serving.txt -r requirements-dev.txt
+      - name: Build a tiny model and a sample image
+        run: |
+          mkdir smoke
+          python -c "from pathlib import Path; from tests.conftest import build_tiny_model; build_tiny_model(Path('smoke/best_model.onnx'))"
+          python -c "from PIL import Image; Image.new('RGB', (64, 64), (255, 0, 0)).save('smoke/red.png')"
+      - run: docker build -t defect-api .
+      - name: The image carries code only, and does not run as root
+        run: |
+          docker run --rm --entrypoint sh defect-api -c 'test ! -e /app/data && test ! -e /app/models && ! ls /app | grep -q onnx'
+          test "$(docker run --rm --entrypoint id defect-api -u)" = "1000"
+      - name: Serve a model from a mounted file
+        run: |
+          docker run -d --name api -p 8000:8000 -v "$PWD/smoke:/models:ro" -e MODEL_PATH=/models/best_model.onnx defect-api
+          for i in $(seq 1 30); do curl -sf localhost:8000/health && break; sleep 1; done
+          curl -sf localhost:8000/health
+          curl -sf -F file=@smoke/red.png localhost:8000/predict | tee /dev/stderr | grep -q '"predicted_class":"red"'
+          docker logs api
+          docker rm -f api
+      - name: Refuse to start without a model
+        run: |
+          if docker run --rm -e MODEL_PATH=/nonexistent.onnx defect-api; then
+            echo "the container started without a model" >&2
+            exit 1
+          fi
