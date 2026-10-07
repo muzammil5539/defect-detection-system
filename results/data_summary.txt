@@ -1,0 +1,52 @@
+NEU-DET DATASET SUMMARY
+============================================================
+
+FOLDER TREE
+NEU-DET/
+    train/  (0 files)
+        annotations/  (1439 files)
+        images/  (0 files)
+            crazing/  (240 files)
+            inclusion/  (240 files)
+            patches/  (240 files)
+            pitted_surface/  (240 files)
+            rolled-in_scale/  (240 files)
+            scratches/  (240 files)
+    validation/  (0 files)
+        annotations/  (361 files)
+        images/  (0 files)
+            crazing/  (60 files)
+            inclusion/  (60 files)
+            patches/  (60 files)
+            pitted_surface/  (60 files)
+            rolled-in_scale/  (60 files)
+            scratches/  (60 files)
+
+[TRAIN]  total images: 1440
+  classes: all 6 present
+  crazing           240
+  inclusion         240
+  patches           240
+  pitted_surface    240
+  rolled-in_scale   240
+  scratches         240
+  imbalance ratio (max/min): 1.00
+  corrupted images: 0
+  unique dimensions: {(200, 200): 1440}
+  modes: {'RGB': 1440}
+  formats: {'JPEG': 1440}
+
+[VALIDATION]  total images: 360
+  classes: all 6 present
+  crazing           60
+  inclusion         60
+  patches           60
+  pitted_surface    60
+  rolled-in_scale   60
+  scratches         60
+  imbalance ratio (max/min): 1.00
+  corrupted images: 0
+  unique dimensions: {(200, 200): 360}
+  modes: {'RGB': 360}
+  formats: {'JPEG': 360}
+

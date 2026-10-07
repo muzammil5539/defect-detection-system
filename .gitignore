@@ -1,0 +1,5 @@
+.venv/
+__pycache__/
+*.pyc
+data/raw/
+ddf95790.pdf
