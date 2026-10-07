@@ -62,6 +62,10 @@ curl -F "file=@data/raw/NEU-DET/validation/images/scratches/scratches_241.jpg" h
 
 (The values above only show the shape of a response; your model produces its own.)
 
+## Demo
+
+Watch a walkthrough of the defect detection system: [Loom video](https://www.loom.com/share/e9b6d834ed7c4ddbb1145d0fec633679)
+
 ## The delivery workflow
 
 1. **Publish** (on the training machine, with a key that can *write*):
