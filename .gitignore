@@ -15,3 +15,4 @@ ddf95790.pdf
 /model_cache/
 .pytest_cache/
 .ruff_cache/
+*Access-Keys*.txt
